@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="syle.css">
+</head>
+<body>
+
+<div id="chat">
+    <p class="message">Examplee Message 1</p>
+    <p class="message">Examplee Message 2</p>
+</div>
+<div id="chat_input_container">
+    <input type="text" id="chat_input" placeholder="Type to chat">
+    <button onclick="SendMessage()">Send</button>
+</div>
+
+<script>
+    function MakeMessage(message) {
+        const chat = document.getElementById("chat");
+
+        const new_message = document.createElement("p");
+        new_message.className = "message";
+        new_message.textContent = message
+        chat.appendChild(new_message)
+    }
+    
+    function SendMessage() {
+        const message = document.getElementById("chat_input").value;
+        if(message == "")
+        {
+            return;
+        }
+        const response = fetch("/api/message", {
+            method: "POST",
+            body : message
+        });
+        document.getElementById("chat_input").value = ""
+    }
+
+    async function UpdateMessages() {
+        const response = await fetch("/api/update", {
+            method: "GET"
+        });
+
+        if(! response.ok) {
+            return;
+        }
+        const msg = await response.json();
+
+        if (msg.type != "chat")
+        {
+            console.log("Failed to recieve chat!");
+            return;
+        }
+        
+        const chat = document.getElementById("chat");
+        chat.replaceChildren();
+
+        msg.data.forEach(message => {
+            MakeMessage(message);
+        });
+    }
+    
+    document.getElementById("chat_input").addEventListener(
+        "keypress", ((event) =>
+        {
+            if(event.key != "Enter")  
+            {
+                return;
+            }
+            SendMessage();
+        })
+    )
+    setInterval(UpdateMessages, 1000);
+
+</script>
+</body>
+</html>
